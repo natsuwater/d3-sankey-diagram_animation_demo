@@ -45,7 +45,7 @@
 </p>
 </div>
 <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
-<script src="d3-sankey-diagram.js" charset="utf-8"></script>
+<script src="d3-sankey-diagram.min.js" charset="utf-8"></script>
 <script>
   // Set up SVG
   var svg = d3.select('svg');
@@ -53,13 +53,11 @@
   var height = +svg.attr('height');
   var margin = { top: 10, left: 120, bottom: 10, right: 100 };
   var idx = 0;
-
   var layout = d3.sankey()
         .nodeWidth(80)
         .extent([
           [margin.left, margin.top],
-          [width - margin.left - margin.right, height - margin.top - margin.bottom]]);
- 
+          [width - margin.left - margin.right, height - margin.top - margin.bottom]]); 
   const fmtl = d3.format('.5')
   function linkTitle(d) {
     const parts = [];
@@ -67,7 +65,7 @@
     const targetTitle = d.target.title;
  
     parts.push(`${sourceTitle} → ${targetTitle}`);
-    parts.push(fmtl(d.value) + " PJ");
+    parts.push(fmtl(d.value[idx]) + " PJ");
     return parts.join('\n');
   } 				  
 
@@ -81,24 +79,21 @@
                     	    else {return ""};})
     .linkColor(function(d) { return color(d.type); });
 	
-  // var jsonFile = "http://localhost:8080/ja_energy.json";
   d3.json('ja_energy_history.json', function(energy) {
     layout
         .linkValue(function (d) {return d.value[idx];})
 		.rankSets(energy.rankSets)
 	    .ordering(energy.order);
-    var el = d3.select('#sankey svg')
+    svg
         .datum(layout(energy))
         .call(diagram.groups(energy.groups));
-	var linklab = svg
+	var linklab = d3.select('svg')
 		.selectAll('.link')
 		.append("text")
           .attr("x", function(d) {return d.points[0].x;})
           .attr("y", function(d) {return d.points[0].y;})
           .attr("dx", "1.5em")
           .attr("dy", "0.4em")
-		.filter(function(d) { return d.value[idx] > 1000 })
-          .text(function(d) { return fmt(d.value[idx]) + ' PJ'; });
 
   d3.interval(update, 3000);  
 
@@ -122,8 +117,20 @@
   
   }
 
-  );
-				 
+    function update() {
+      idx++;
+      if(idx > 5) idx = 0;
+      layout(energy);	
+      svg
+        .transition().duration(1000).ease(d3.easeCubic)
+        .call(diagram);
+	  linklab
+	    .transition().duration(1000)
+        .text(function(d) { return d.value[idx] > 1000 ? fmt(d.value[idx]) + ' PJ' : ""; })
+          .attr("y", function(d) {return d.points[0].y;})
+	  d3.select('h2').text(energy.year[idx]);
+    }  
+  });
 </script>
 </body>
 </html>
