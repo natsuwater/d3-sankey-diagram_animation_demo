@@ -1,2 +1,5 @@
 # d3-sankey-diagram_animation_demo
-just a demonstration of how d3-sankey-diagram.js can be used for an animation
+A demonstration of how [d3-sankey-diagram.js](https://github.com/ricklupton/d3-sankey-diagram) can be used for an animation.
+
+
+ 

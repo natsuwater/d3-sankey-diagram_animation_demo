@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+<style>
+ h1 {
+    font-weight: normal;
+    font-size: 2.5em;
+ }
+ h2 {
+    font-weight: normal;
+    font-size: 1.8em;
+ }
+ .links path {
+     opacity: 0.4;
+ }
+
+ .nodes text, .link text {
+     font-family: sans-serif;
+     font-size: 9pt !important;
+ }
+
+ .node-body {
+   fill: #bbb;
+   stroke: black;
+   stroke-width: 0.5px;
+ }
+
+ .group rect { 
+   fill: rgb(39, 174, 214);
+   opacity: 0.2;
+ }   
+</style>
+</head>
+<body>
+<h1>
+日本のエネルギーバランス・フロー概要（2008-2016年度）
+</h1>
+<h2>2006</h2>  
+<div id="sankey" class="sankey">
+<svg width="1200" height="700"></svg>
+
+<p class="source"> データは
+<a href="http://www.enecho.meti.go.jp/statistics/total_energy/results.html#headline2">
+総合エネルギー統計（エネルギーバランス表） </a> による
+</p>
+</div>
+<script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
+<script src="d3-sankey-diagram.js" charset="utf-8"></script>
+<script>
+  // Set up SVG
+  var svg = d3.select('svg');
+  var width = +svg.attr('width');
+  var height = +svg.attr('height');
+  var margin = { top: 10, left: 120, bottom: 10, right: 100 };
+  var idx = 0;
+
+  var layout = d3.sankey()
+        .nodeWidth(80)
+        .extent([
+          [margin.left, margin.top],
+          [width - margin.left - margin.right, height - margin.top - margin.bottom]]);
+ 
+  const fmtl = d3.format('.5')
+  function linkTitle(d) {
+    const parts = [];
+	const sourceTitle = d.source.title;
+    const targetTitle = d.target.title;
+ 
+    parts.push(`${sourceTitle} → ${targetTitle}`);
+    parts.push(fmtl(d.value) + " PJ");
+    return parts.join('\n');
+  } 				  
+
+  // Render
+  var color = d3.scaleOrdinal(d3.schemeCategory10);
+  var fmt = d3.format('.1f');
+  var diagram = d3.sankeyDiagram()
+    //.linkMinWidth(function(d) { return 1; })
+	.linkTitle(linkTitle)
+    .nodeValue(function(d) { if (d.value > 0) { return fmt(d.value) + ' PJ'; }
+                    	    else {return ""};})
+    .linkColor(function(d) { return color(d.type); });
+	
+  // var jsonFile = "http://localhost:8080/ja_energy.json";
+  d3.json('ja_energy_history.json', function(energy) {
+    layout
+        .linkValue(function (d) {return d.value[idx];})
+		.rankSets(energy.rankSets)
+	    .ordering(energy.order);
+    var el = d3.select('#sankey svg')
+        .datum(layout(energy))
+        .call(diagram.groups(energy.groups));
+	var linklab = svg
+		.selectAll('.link')
+		.append("text")
+          .attr("x", function(d) {return d.points[0].x;})
+          .attr("y", function(d) {return d.points[0].y;})
+          .attr("dx", "1.5em")
+          .attr("dy", "0.4em")
+		.filter(function(d) { return d.value[idx] > 1000 })
+          .text(function(d) { return fmt(d.value[idx]) + ' PJ'; });
+
+  d3.interval(update, 3000);  
+
+  function update() {
+    idx++;
+    if(idx > 5) idx = 0;
+    layout(energy);	
+    el
+      .transition()
+	  .duration(1000)
+	  .ease(d3.easeCubic)
+      .call(diagram);
+	d3.select('h2').text(energy.year[idx]);
+	linklab
+	  .text(function(d) { return ''; })
+	  .filter(function(d) { return d.value[idx] > 1000 })
+      .text(function(d) { return fmt(d.value[idx]) + ' PJ'; })
+	  .filter(function(d) { return d.value[idx] <= 1000 })
+      .text(function(d) { return ''; });
+	  }
+  
+  }
+
+  );
+				 
+</script>
+</body>
+</html>
