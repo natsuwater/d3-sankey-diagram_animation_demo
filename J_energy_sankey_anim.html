@@ -45,7 +45,7 @@
 </p>
 </div>
 <script src="https://d3js.org/d3.v4.js" charset="utf-8"></script>
-<script src="d3-sankey-diagram.min.js" charset="utf-8"></script>
+<script src="d3-sankey-diagram.js" charset="utf-8"></script>
 <script>
   // Set up SVG
   var svg = d3.select('svg');
@@ -94,28 +94,10 @@
           .attr("y", function(d) {return d.points[0].y;})
           .attr("dx", "1.5em")
           .attr("dy", "0.4em")
+          .text(function(d) { return d.value[idx] > 1000 ? fmt(d.value[idx]) + ' PJ' : ""; });
 
-  d3.interval(update, 3000);  
-
-  function update() {
-    idx++;
-    if(idx > 5) idx = 0;
-    layout(energy);	
-    el
-      .transition()
-	  .duration(1000)
-	  .ease(d3.easeCubic)
-      .call(diagram);
-	d3.select('h2').text(energy.year[idx]);
-	linklab
-	  .text(function(d) { return ''; })
-	  .filter(function(d) { return d.value[idx] > 1000 })
-      .text(function(d) { return fmt(d.value[idx]) + ' PJ'; })
-	  .filter(function(d) { return d.value[idx] <= 1000 })
-      .text(function(d) { return ''; });
-	  }
-  
-  }
+    //update();
+    d3.interval(update, 3000);  
 
     function update() {
       idx++;
@@ -127,6 +109,7 @@
 	  linklab
 	    .transition().duration(1000)
         .text(function(d) { return d.value[idx] > 1000 ? fmt(d.value[idx]) + ' PJ' : ""; })
+          .attr("x", function(d) {return d.points[0].x;})
           .attr("y", function(d) {return d.points[0].y;})
 	  d3.select('h2').text(energy.year[idx]);
     }  
