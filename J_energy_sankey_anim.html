@@ -96,7 +96,6 @@
           .attr("dy", "0.4em")
           .text(function(d) { return d.value[idx] > 1000 ? fmt(d.value[idx]) + ' PJ' : ""; });
 
-    //update();
     d3.interval(update, 3000);  
 
     function update() {
